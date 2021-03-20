@@ -5,7 +5,6 @@ cmake_minimum_required(VERSION 3.0)
 set(PROJECT_NAME "anaroute")
 project(${PROJECT_NAME})
 
-include_directories("..")
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
@@ -17,8 +16,6 @@ endif()
 message(STATUS "Install Prefix: ${CMAKE_INSTALL_PREFIX}")
 unset(CMAKE_INSTALL_PREFIX)
 
-
-
 # deal with GCC dual ABI issue 
 if(NOT CMAKE_CXX_ABI)
     set(CMAKE_CXX_ABI 0 CACHE STRING
@@ -28,9 +25,11 @@ endif(NOT CMAKE_CXX_ABI)
 message(STATUS "CMAKE_CXX_ABI: _GLIBCXX_USE_CXX11_ABI=${CMAKE_CXX_ABI}")
 add_definitions(-D_GLIBCXX_USE_CXX11_ABI=${CMAKE_CXX_ABI})
 
+find_package(PkgConfig REQUIRED)
 
 # Find LIMBO
-set(LIMBO_ROOT_DIR ../limbo )
+set(LIMBO_ROOT_DIR ../limbo/limbo )
+include_directories(${LIMBO_ROOT_DIR}/..)
 message(STATUS "Find Limbo: ${LIMBO_ROOT_DIR}")
 unset(LIMBO_DIR CACHE)
 
@@ -182,4 +181,3 @@ target_link_libraries(${PROJECT_NAME}Py PUBLIC ${LIMBO_LIB} ${Boost_LIBRARIES} $
 
 #Install
 install(TARGETS ${PROJECT_NAME} DESTINATION ${CMAKE_INSTALL_PREFIX_DIR}/bin)
-
