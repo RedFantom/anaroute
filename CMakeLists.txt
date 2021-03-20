@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.0)
 set(PROJECT_NAME "anaroute")
 project(${PROJECT_NAME})
 
+include_directories("..")
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
@@ -29,60 +30,41 @@ add_definitions(-D_GLIBCXX_USE_CXX11_ABI=${CMAKE_CXX_ABI})
 
 
 # Find LIMBO
-if (LIMBO_DIR)
-  set(LIMBO_ROOT_DIR ${LIMBO_DIR})
-else()
-  set(LIMBO_ROOT_DIR $ENV{LIMBO_DIR})
-endif()
+set(LIMBO_ROOT_DIR ../limbo )
 message(STATUS "Find Limbo: ${LIMBO_ROOT_DIR}")
 unset(LIMBO_DIR CACHE)
 
 # Find Lemon
-if (LEMON_DIR)
-  set(LEMON_ROOT_DIR ${LEMON_DIR})
-else()
-  set(LEMON_ROOT_DIR $ENV{LEMON_DIR})
-endif()
-message(STATUS "Find Lemon: ${LEMON_ROOT_DIR}")
-unset(LEMON_DIR CACHE)
-
-
-# Find SparseHash
-if (SPARSE_HASH_DIR)
-  set(SPARSEHASH_ROOT_DIR ${SPARSE_HASH_DIR})
-else()
-  set(SPARSEHASH_ROOT_DIR $ENV{SPARSE_HASH_DIR})
-endif()
-message(STATUS "Find SparseHash: ${SPARSEHASH_ROOT_DIR}")
-unset(SPARSE_HASH_DIR CACHE)
+pkg_check_modules(LEMON REQUIRED lemon)
+include_directories(${LEMON_INCLUDE_DIRS})
+link_libraries(lemon)
+message(STATUS "Found Lemon: " ${LEMON_FOUND})
+message(STATUS "Lemon libraries: " ${LEMON_LIBRARIES})
 
 # Find Boost
-#if (BOOST_DIR)
-  #set(BOOST_ROOT ${BOOST_DIR})
-  #set(BOOST_INCLUDEDIR ${BOOST_DIR}/boost)
-  #set(BOOST_LIBRARYDIR ${BOOST_DIR}/libs)
-#else()
-  #set(BOOST_ROOT $ENV{BOOST_DIR})
-  #set(BOOST_INCLUDEDIR $ENV{BOOST_DIR}/boost)
-  #set(BOOST_LIBRARYDIR $ENV{BOOST_DIR}/libs)
-#endif()
-
 find_package(Boost 1.6 REQUIRED COMPONENTS system graph iostreams)
 
 # Find Zlib
 find_package(ZLIB REQUIRED)
 
 # Find pybind11
-if (PYBIND11_DIR)
-  set(PYBIND11_ROOT_DIR ${PYBIND11_DIR})
-else()
-  set(PYBIND11_ROOT_DIR $ENV{PYBIND11_DIR})
-endif()
-message(STATUS "Find Pybind11: ${PYBIND11_ROOT_DIR}")
-unset(PYBIND11_DIR)
-add_subdirectory(${PYBIND11_ROOT_DIR} "./pybind11")
+find_package(pybind11 REQUIRED )
+include_directories(${PYBIND11_INCLUDE_DIRS})
+link_libraries(${PYBIND11_LIBS})
+unset(PYBIND11_DIR CACHE)
 set(PYBIND11_CPP_STANDARD -std=c++14)
 
+# Find Libsparsehash
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(SPARSE REQUIRED libsparsehash)
+include_directories(${SPARSE_INCLUDE_DIRS})
+link_libraries(${SPARSE_LIBRARIES})
+
+# Python
+pkg_check_modules(PYTHON REQUIRED python2=2.7)
+include_directories(${PYTHON_INCLUDE_DIRS})
+link_libraries(${PYTHON_LIBRARIES})
+message(STATUS "Found Python2: " ${PYTHON_FOUND})
 
 #Print out the used build type
 IF(CMAKE_BUILD_TYPE MATCHES Debug)
@@ -179,24 +161,20 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
   ${LEMON_ROOT_DIR}/include
 )
 
-file(GLOB LIMBO_LIB 
+file(GLOB LIMBO_LIB
   #lefdef
-  ${LIMBO_ROOT_DIR}/lib/libcdef.a 
-  ${LIMBO_ROOT_DIR}/lib/libcdefzlib.a 
-  ${LIMBO_ROOT_DIR}/lib/libdef.a 
-  ${LIMBO_ROOT_DIR}/lib/libdefzlib.a 
-	${LIMBO_ROOT_DIR}/lib/libdefparser.a
-	${LIMBO_ROOT_DIR}/lib/libdefparseradapt.a
-  ${LIMBO_ROOT_DIR}/lib/libclef.a 
-  ${LIMBO_ROOT_DIR}/lib/libclefzlib.a 
-  ${LIMBO_ROOT_DIR}/lib/liblef.a 
-  ${LIMBO_ROOT_DIR}/lib/liblefzlib.a
-	${LIMBO_ROOT_DIR}/lib/liblefparseradapt.a
+  ${LIMBO_ROOT_DIR}/thirdparty/lefdef/5.8/def/libcdef.a
+  ${LIMBO_ROOT_DIR}/thirdparty/lefdef/5.8/def/libcdefzlib.a
+  ${LIMBO_ROOT_DIR}/thirdparty/lefdef/5.8/def/libdef.a
+  ${LIMBO_ROOT_DIR}/thirdparty/lefdef/5.8/def/libdefzlib.a
+  ${LIMBO_ROOT_DIR}/parsers/def/bison/libdefparser.a
+  ${LIMBO_ROOT_DIR}/parsers/def/bison/libdefparseradapt.a
+  ${LIMBO_ROOT_DIR}/parsers/lef/adapt/liblefparseradapt.a
   #limbo gdsparser
-  ${LIMBO_ROOT_DIR}/lib/libgdsdb.a 
-  ${LIMBO_ROOT_DIR}/lib/libgdsparser.a
-  # gzstream
-  ${LIMBO_ROOT_DIR}/lib/libgzstream.a
+  ${LIMBO_ROOT_DIR}/parsers/gdsii/gdsdb/libgdsdb.a
+  ${LIMBO_ROOT_DIR}/parsers/gdsii/stream/libgdsparser.a
+  # limbo gzstream
+  ${LIMBO_ROOT_DIR}/thirdparty/gzstream/libgzstream.a
 )
 
 target_link_libraries(${PROJECT_NAME} ${LIMBO_LIB} ${Boost_LIBRARIES} ${ZLIB_LIBRARIES})
